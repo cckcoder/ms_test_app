@@ -4,8 +4,15 @@ pipeline {
   stages {
     stage('Verify Branch') {
       steps {
-        sh 'printenv'
+        sh '$GIT_BRANCH'
       }
+    }
+    stage('Docker Build') {
+      sh(script: 'docker image ls')
+      sh(script: """
+        docker build -t cckcoder/fastapi:latest .
+        docker images -a
+      """)
     }
   }
 }
