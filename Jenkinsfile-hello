@@ -9,11 +9,11 @@ pipeline {
     }
     stage('Docker Build') {
       steps {
-        sh(script: 'docker image ls')
-        sh(script: """
-          docker build -t cckcoder/fastapi:latest .
-          docker images -a
-        """)
+        sh(script: 'docker --version')
+        //sh(script: """
+          //docker build -t cckcoder/fastapi:latest .
+          //docker images -a
+        //""")
       }
     }
   }
