@@ -36,7 +36,7 @@ pipeline {
   stages {
     stage('Kaniko build & push Image') {
       steps {
-        echo "check up token ${GIT_TOKEN}"
+        sh "echo check up token ${GIT_TOKEN}"
       }
     }
     //stage('Docker Build') {
