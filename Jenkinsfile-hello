@@ -30,13 +30,13 @@ pipeline {
     """
     }
   }
-  environment {
-    GIT_TOKEN = credentials('GitHub Connection')
-  }
   stages {
-    stage('Kaniko build & push Image') {
+    stage('kaniko clone project & Exec') {
       steps {
-        sh "echo check up token ${GIT_TOKEN}"
+        container('kaniko') {
+          sh('git clone https://github.com/cckcoder/ms_test_app.git')
+          sh('docker --version')
+        }
       }
     }
     //stage('Docker Build') {
