@@ -1,20 +1,57 @@
 pipeline {
-  agent any
-
+  options {
+    ansiColor('xterm')
+  }
+  agent {
+    kubernetes {
+      defaultContainer 'kaniko' 
+      yaml """
+ apiVersion: v1
+ kind: Pod
+ metadata:
+   name: kaniko
+ spec:
+   containers:
+   - name: kubectl
+     image: joshendriks/alpine-k8s
+     command:
+     - /bin/cat
+     tty: true    
+   - name: kaniko
+     image: gcr.io/kaniko-project/executor:debug
+     command:
+     - /busybox/cat
+     tty: true
+     volumeMounts:
+       - name: kaniko-secret
+         mountPath: /kaniko/.docker
+   volumes:
+     - name: kaniko-secret
+       secret:
+         secretName: regcred
+         items:
+           - key: .dockerconfigjson
+             path: config.json
+      """
+    }
+  }
   stages {
-    stage('Verify Branch') {
+    stage('Kaniko build & push Image') {
+      environment {
+        GIT_TOKEN = credentials('GitHub Connection')
+      }
       steps {
-        sh 'printenv'
+        echo '$GIT_TOKEN'
       }
     }
-    stage('Docker Build') {
-      steps {
-        sh(script: 'docker --version')
+    //stage('Docker Build') {
+      //steps {
+        //sh(script: 'docker --version')
         //sh(script: """
           //docker build -t cckcoder/fastapi:latest .
           //docker images -a
         //""")
-      }
-    }
+      //}
+    //}
   }
 }
