@@ -36,7 +36,7 @@ pipeline {
         GIT_TOKEN = credentials('GitHub Connection')
       }
       steps {
-        echo '$GIT_TOKEN'
+        echo "${GIT_TOKEN}"
       }
     }
     //stage('Docker Build') {
