@@ -35,7 +35,7 @@ pipeline {
       steps {
         container('kaniko') {
           script {
-            sh('git clone https://github.com/cckcoder/ms_test_app.git')
+            //sh('git clone https://github.com/cckcoder/ms_test_app.git')
             sh('docker --version')
           }
         }
