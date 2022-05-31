@@ -1,0 +1,62 @@
+pipeline {
+  options {
+    ansiColor('xterm')
+  }
+  agent {
+    kubernetes {
+      yamlFile 'jenkins/builder.yaml'
+    }
+  }
+  agent {
+    kubernetes {
+      defaultContainer 'kaniko'
+      yaml '' ' 
+        apiVersion: v1 kind:
+          Pod metadata:
+            name: kaniko spec:
+              containers:
+                - name: kubectl
+                image: joshendriks/alpine-k8s 
+                command:     - /bin/cat     tty: true       - name: kaniko     image: gcr.io/kaniko-project/executor:debug     command:     - /busybox/cat     tty: true     volumeMounts:       - name: kaniko-secret         mountPath: /kaniko/.docker   volumes:     - name: kaniko-secret       secret:         secretName: regcred         items:           - key: .dockerconfigjson             path: config.json '
+      ''
+    }
+  }
+  stages {
+    stage('Kaniko Build & Push Image') {
+      environment {
+        GIT_ID = credentials('GIT_ID') 
+        GIT_TOKEN = credentials('GIT_TOKEN') 
+        GIT_CRED = credentials('f0a153aa-2563-45ac-9c89-1f30f40dfb84')
+      }
+      steps {
+        container('kaniko') {
+          script {
+            sh 'git clone https:${GIT_ID}:${GIT_TOKEN}@gitlab.com/pattharapongd/golang-webapp.git'
+            sh '''
+            printenv /kaniko/executor --dockerfile `pwd`/dockerfile \
+            --build-arg GIT_ID=${GIT_CRED_USR} --build-arg GIT_TOKEN=${GIT_CRED_PSW} \
+            --context `pwd` \
+            --destination=taeptrp/golang-webapp:${BUILD_NUMBER}            
+            '''
+          }
+        }
+      }
+    }
+    stage('Deploy App to Kubernetes') {
+      steps {
+        container('kubectl') {
+          withCredentials([file(credentialsId: 'mykubeconfig', variable: 'KUBECONFIG')]) {
+            sh 'git clone https:${GIT_ID}:${GIT_TOKEN}@gitlab.com/pattharapongd/golang-webapp.git'
+            sh 'sed -i "s/<TAG>/${BUILD_NUMBER}/" jenkins/golang-webapp.yaml'
+            sh 'sed -i "s/<TAG>/22/" jenkins/golang-webapp.yaml'
+            sh 'cat jenkins/golang-webapp.yaml'
+            sh 'printenv'
+            sh 'cat ${KUBECONFIG}'
+            sh 'kubectl get ns test || kubectl create ns test'
+            sh 'kubectl apply -f jenkins/golang-webapp.yaml'
+          }
+        }
+      }
+    }
+  }
+}
